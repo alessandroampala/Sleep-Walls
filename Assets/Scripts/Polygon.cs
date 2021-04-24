@@ -42,12 +42,26 @@ public class Polygon : MonoBehaviour
     void TileAppear()
     {
         animator.SetTrigger("appear");
-        Number = Random.Range(1, 9);
-        int indexOppositeTile = (IndexOf(GameManager.instance.polygons, PlayerController.lastPassedTile) + 4) % 8;
-        if (gameObject == GameManager.instance.polygons[indexOppositeTile])
+        Number = Random.Range(1, 3);
+        //int indexOppositeTile = (IndexOf(GameManager.instance.polygons, PlayerController.lastPassedTile) + 4) % 8;
+        //if (gameObject == GameManager.instance.polygons[indexOppositeTile])
+        //{
+        //    sr.sprite = GameManager.instance.cross;
+        //    Number = -1;
+        //}
+
+        lock (GameManager.lockObj)
         {
-            sr.sprite = GameManager.instance.cross;
-            Number = -1;
+            if(GameManager.crossNumber > 0)
+            {
+                GameManager.crossNumber--;
+                sr.sprite = GameManager.instance.cross;
+                Number = -1;
+            }
+            else
+            {
+                Number = GetLevelTileNumber(GameManager.level);
+            }
         }
     }
 
@@ -64,5 +78,37 @@ public class Polygon : MonoBehaviour
     public void Wawe()
     {
         animator.SetTrigger("wawe");
+    }
+
+    int GetLevelTileNumber(int level)
+    {
+        if (level <= 5)
+        {
+            return Random.Range(1, 4);
+        }
+        else if (level <= 10)
+        {
+            return Random.Range(1, 5);
+        }
+        else if (level <= 20)
+        {
+            return Random.Range(2, 6);
+        }
+        else if (level <= 30)
+        {
+            bool b = Random.Range(0, 1) > 0.5f;
+            if (b)
+            {
+                return Random.Range(4, 7);
+            }
+            else
+            {
+                return Random.Range(7, 9);
+            }
+        }
+        else
+        {
+            return Random.Range(8, 9);
+        }
     }
 }
