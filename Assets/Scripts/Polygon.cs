@@ -11,7 +11,8 @@ public class Polygon : MonoBehaviour
         set
         {
             _number = value;
-            sr.sprite = GameManager.instance.numbers[_number - 1];
+            if(_number > 0)
+                sr.sprite = GameManager.instance.numbers[_number - 1];
         }
     }
 
