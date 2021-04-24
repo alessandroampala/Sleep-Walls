@@ -14,6 +14,8 @@ public class PlayerController : MonoBehaviour
     public float groundSmoothTime = 1;
     Vector2 currentGroundVelocity;
 
+    public static GameObject lastPassedTile = null;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -39,11 +41,28 @@ public class PlayerController : MonoBehaviour
         {
             RaycastHit2D hit = Physics2D.Raycast(arrow.transform.position, arrow.transform.right);
             GameObject hitted = hit.transform.gameObject;
-            hitted.GetComponent<Polygon>().Number--;
-            if(hitted.GetComponent<Polygon>().Number == 0)
+
+            //if hitted a cross
+            if(hitted.GetComponent<Polygon>().sr.sprite == GameManager.instance.cross)
             {
-                Move(hitted);
+                GameManager.percentage -= 5;
+                GameManager.instance.UpdatePercentage();
             }
+            else
+            {
+                hitted.GetComponent<Polygon>().Wawe();
+                hitted.GetComponent<Polygon>().Number--;
+                if(hitted.GetComponent<Polygon>().Number == 0)
+                {
+                    Move(hitted);
+                    EventManager.TileFade.Invoke();
+                    StartCoroutine(AppearTiles());
+                    lastPassedTile = hitted;
+                    GameManager.percentage = Mathf.Clamp(GameManager.percentage + 5, 0, 100);
+                }
+
+            }
+
         }
 
         TerrainMove();
@@ -55,10 +74,15 @@ public class PlayerController : MonoBehaviour
         terrainDest = ground.transform.position + new Vector3(direction.x, direction.y, 0) * groundMovement;
     }
 
-
-
     void TerrainMove()
     {
         ground.transform.position = Vector2.SmoothDamp(ground.transform.position, terrainDest, ref currentGroundVelocity, groundSmoothTime);
     }
+
+    private IEnumerator AppearTiles()
+    {
+        yield return new WaitForSeconds(groundSmoothTime * 1.2f);
+        EventManager.TileAppear.Invoke();
+    }
+
 }
