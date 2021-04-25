@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour
     public static int percentage = 100;
     public static int level = 0;
     public static int points = 0;
+    static bool inGame = false;
     public static object lockObj = new object ();
     public static int crossNumber = 0;
 
@@ -22,23 +23,33 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI percentageText;
     public TextMeshProUGUI pointsText;
     public TextMeshProUGUI phaseText;
+    public TextMeshProUGUI deathText;
     public Image brain;
 
     public UnityEngine.Rendering.Volume postProcessing;
     public UnityEngine.Rendering.Universal.Bloom bloom;
 
+    public GameObject[] menuObjects;
+    public GameObject[] gameObjects;
+    public GameObject[] deathObjects;
+
+    public Image tentacleLeft;
+    public Image tentacleRight;
+
+
     private void Awake()
     {
         instance = this;
+        EventManager.ToMenu.AddListener(ToMenu);
+        EventManager.ToGame.AddListener(ToGame);
+        EventManager.Death.AddListener(Death);
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        StartCoroutine(PercentageCounter());
-        Debug.Log(percentageText.text.Substring(0, percentageText.text.Length - 1));
         postProcessing.profile.TryGet(out bloom);
-        AudioManager.Play("Soundtrack");
+        EventManager.ToMenu.Invoke();
     }
 
     IEnumerator PercentageCounter()
@@ -49,6 +60,10 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(Math.Max(decreaseTime - level / 100f, 0.2f));
             percentage--;
             UpdatePercentage();
+            if(percentage <= 0)
+            {
+                EventManager.Death.Invoke();
+            }
         }
     }
 
@@ -61,25 +76,85 @@ public class GameManager : MonoBehaviour
 
         if(percentage > 75)
         {
-            phaseText.text = "Phase: Deep Sleep";
+            phaseText.text = "Stage: Deep Sleep";
         }
         else if (percentage > 50)
         {
-            phaseText.text = "Phase: Light Sleep";
+            phaseText.text = "Stage: Light Sleep";
         }
         else if (percentage > 15)
         {
-            phaseText.text = "Phase: REM";
+            phaseText.text = "Stage: REM";
         }
         else
         {
-            phaseText.text = "Phase: Awake";
+            phaseText.text = "Stage: Awake";
         }
         phaseText.color = Color.Lerp(Color.red, Color.green, percentage / 100f);
+        tentacleLeft.color = tentacleRight.color = Color.Lerp(Color.red, Color.white, percentage / 100f);
     }
 
     public void UpdatePoints()
     {
         pointsText.text = "Points: " + points.ToString();
+    }
+
+    public void ToMenu()
+    {
+        foreach(GameObject o in menuObjects)
+        {
+            o.SetActive(true);
+        }
+        foreach (GameObject o in gameObjects)
+        {
+            o.SetActive(false);
+        }
+        foreach (GameObject o in deathObjects)
+        {
+            o.SetActive(false);
+        }
+        inGame = false;
+        StopCoroutine(PercentageCounter());
+    }
+
+    public void ToGame()
+    {
+        foreach (GameObject o in menuObjects)
+        {
+            o.SetActive(false);
+        }
+        foreach (GameObject o in gameObjects)
+        {
+            o.SetActive(true);
+        }
+        foreach (GameObject o in deathObjects)
+        {
+            o.SetActive(false);
+        }
+        inGame = true;
+        level = 0;
+        percentage = 100;
+        StartCoroutine(PercentageCounter());
+        AudioManager.Play("Soundtrack");
+    }
+
+    public void Death()
+    {
+        deathText.color = Color.red;
+        deathText.text = "You woke up!\nPoints: " + points;
+        foreach (GameObject o in menuObjects)
+        {
+            o.SetActive(false);
+        }
+        foreach (GameObject o in gameObjects)
+        {
+            o.SetActive(false);
+        }
+        foreach (GameObject o in deathObjects)
+        {
+            o.SetActive(true);
+        }
+        StopCoroutine(PercentageCounter());
+        AudioManager.Stop("Soundtrack");
     }
 }

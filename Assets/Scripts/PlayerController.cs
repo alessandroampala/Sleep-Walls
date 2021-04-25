@@ -23,6 +23,11 @@ public class PlayerController : MonoBehaviour
 
     int currentHits = 0;
 
+    private void Awake()
+    {
+        EventManager.ToGame.AddListener(() => { ground.transform.position = Vector3.zero;});
+    }
+
     // Start is called before the first frame update
     void Start()
     {
