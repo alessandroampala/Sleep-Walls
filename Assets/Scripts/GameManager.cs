@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
     public float decreaseTime = 0.5f;
     public TextMeshProUGUI percentageText;
     public TextMeshProUGUI pointsText;
+    public TextMeshProUGUI phaseText;
     public Image brain;
 
     public UnityEngine.Rendering.Volume postProcessing;
@@ -37,13 +38,15 @@ public class GameManager : MonoBehaviour
         StartCoroutine(PercentageCounter());
         Debug.Log(percentageText.text.Substring(0, percentageText.text.Length - 1));
         postProcessing.profile.TryGet(out bloom);
+        AudioManager.Play("Soundtrack");
     }
 
     IEnumerator PercentageCounter()
     {
         while(true)
         {
-            yield return new WaitForSeconds(decreaseTime);
+            Debug.Log(Math.Max(decreaseTime - level / 100f, 0.1f));
+            yield return new WaitForSeconds(Math.Max(decreaseTime - level / 100f, 0.2f));
             percentage--;
             UpdatePercentage();
         }
@@ -56,6 +59,23 @@ public class GameManager : MonoBehaviour
         Color bloomColor = Color.Lerp(Color.red, Color.white, percentage / 100f);
         bloom.tint.Override(bloomColor);
 
+        if(percentage > 75)
+        {
+            phaseText.text = "Phase: Deep Sleep";
+        }
+        else if (percentage > 50)
+        {
+            phaseText.text = "Phase: Light Sleep";
+        }
+        else if (percentage > 15)
+        {
+            phaseText.text = "Phase: REM";
+        }
+        else
+        {
+            phaseText.text = "Phase: Awake";
+        }
+        phaseText.color = Color.Lerp(Color.red, Color.green, percentage / 100f);
     }
 
     public void UpdatePoints()

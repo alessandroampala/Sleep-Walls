@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     public float groundMovement = 2f;
     public float groundSmoothTime = 1;
     Vector2 currentGroundVelocity;
+    bool lastTileLock = false;
 
     public static GameObject lastPassedTile = null;
 
@@ -48,7 +49,7 @@ public class PlayerController : MonoBehaviour
         {
             RaycastHit2D hit = Physics2D.Raycast(arrow.transform.position, arrow.transform.right);
 
-            if (hit)
+            if (hit && !lastTileLock)
             {
 
                 GameObject hitted = hit.transform.gameObject;
@@ -77,8 +78,9 @@ public class PlayerController : MonoBehaviour
                         EventManager.TileFade.Invoke();
                         StartCoroutine(AppearTiles());
                         lastPassedTile = hitted;
-                        GameManager.percentage = Mathf.Clamp(GameManager.percentage + 5, 0, 100);
+                        GameManager.percentage = Mathf.Clamp(GameManager.percentage + 5 + currentHits / 2, 0, 100);
                         lastPassedTile.SetActive(false);
+                        lastTileLock = true;
 
                         AddPoints(currentHits * 100);
                         currentHits = 0;
@@ -108,6 +110,7 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(groundSmoothTime * 1.2f);
         lastPassedTile.SetActive(true);
         EventManager.TileAppear.Invoke();
+        lastTileLock = false;
     }
 
     void SetLevelParameters(int level)
